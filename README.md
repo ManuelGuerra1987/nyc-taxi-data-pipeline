@@ -54,8 +54,8 @@ Pgadmin Port mapping:
 
 Go to http://localhost:8080/
 
-PGADMIN_DEFAULT_EMAIL=admin@admin.com
-PGADMIN_DEFAULT_PASSWORD=root
+* PGADMIN_DEFAULT_EMAIL=admin@admin.com
+* PGADMIN_DEFAULT_PASSWORD=root
 
 Right-click on servers and register server
 
@@ -158,5 +158,5 @@ After a few minutes, the data will be inserted into the taxi_trips_raw table in 
 
 <br>
 
-![2](images/2.jpg)
+![4](images/4.jpg)
 <br><br>
