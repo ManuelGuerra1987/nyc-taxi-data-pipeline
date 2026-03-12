@@ -1,4 +1,11 @@
-# 1 Data ingestion
+# nyc taxi data pipeline
+
+
+### Table of contents
+
+- [Data ingestion](#Data-ingestion)
+
+# Data ingestion
 
 ### Setting up the database
 
