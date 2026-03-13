@@ -167,7 +167,7 @@ print("Zone lookup inserted")
 
 
 
-After running the command::
+After running the command:
 
 ```
 python ingest_data.py
@@ -194,4 +194,142 @@ Finally, the script performs a similar process for another table called zone_loo
 <br>
 
 ![4](images/4.jpg)
+<br><br>
+
+
+# Data warehouse
+
+After running the command in PgAdmin:
+
+```sql
+CREATE SCHEMA staging;
+```
+
+```sql
+CREATE SCHEMA dwh;
+```
+
+
+The command CREATE SCHEMA staging; creates a new schema called staging in the database. A schema is a logical container used to organize database objects such as tables, views, and indexes. The staging schema is commonly used to store intermediate data before it is cleaned or transformed.
+
+The command CREATE SCHEMA dwh; creates another schema called dwh, which usually stands for Data Warehouse. This schema is typically used to store the final, structured tables that are optimized for analytics and reporting.
+
+
+### Staging
+
+After running the command in PgAdmin:
+
+```sql
+CREATE TABLE staging.trips AS
+SELECT
+    "VendorID",
+    lpep_pickup_datetime,
+    lpep_dropoff_datetime,
+    passenger_count,
+    trip_distance,
+    "PULocationID",
+    "DOLocationID",
+    payment_type,
+    fare_amount,
+    tip_amount,
+    total_amount
+FROM raw.taxi_trips_raw
+WHERE trip_distance > 0;
+```
+
+Creates a new table called staging.trips. Copies selected columns from raw.taxi_trips_raw. Filters out rows where the trip distance is not greater than zero
+
+### Schema
+
+fact_trips
+dim_date
+dim_location
+dim_payment
+
+### dim_date
+
+```sql
+CREATE TABLE dwh.dim_date AS
+SELECT DISTINCT
+    DATE(lpep_pickup_datetime) AS date,
+    EXTRACT(YEAR FROM lpep_pickup_datetime) AS year,
+    EXTRACT(MONTH FROM lpep_pickup_datetime) AS month,
+    EXTRACT(DAY FROM lpep_pickup_datetime) AS day,
+    EXTRACT(DOW FROM lpep_pickup_datetime) AS weekday
+FROM staging.trips;
+```
+
+### dim_location
+
+```sql
+CREATE TABLE dwh.dim_location AS
+WITH cte AS 
+
+	(SELECT DISTINCT
+	    "PULocationID" AS location_id
+	FROM staging.trips
+	UNION
+	SELECT DISTINCT
+	    "DOLocationID"
+	FROM staging.trips)
+
+select 
+	cte.location_id, 
+	zone_lookup."Borough",
+	zone_lookup."Zone",
+	zone_lookup."service_zone"
+
+
+FROM cte LEFT JOIN raw.zone_lookup
+ON cte.location_id = zone_lookup."LocationID";
+```
+
+<br>
+
+![5](images/5.jpg)
+<br><br>
+
+### dim_payment
+
+```sql
+CREATE TABLE dwh.dim_payment AS
+SELECT DISTINCT
+    payment_type,
+    CASE 
+        WHEN payment_type = 1 THEN 'Credit card'
+        WHEN payment_type = 2 THEN 'Cash'
+        WHEN payment_type = 3 THEN 'No charge'
+        WHEN payment_type = 4 THEN 'Dispute'
+        WHEN payment_type = 5 THEN 'Unknown'
+        WHEN payment_type = 6 THEN 'Voided trip'
+        ELSE 'Other'
+    END AS description
+FROM staging.trips;
+```
+
+<br>
+
+![6](images/6.jpg)
+<br><br>
+
+### fact_trips
+
+```sql
+CREATE TABLE dwh.fact_trips AS
+SELECT
+    DATE(lpep_pickup_datetime) AS date,
+    "PULocationID" AS pickup_location_id,
+    "DOLocationID" AS dropoff_location_id,
+    payment_type,
+    passenger_count,
+    trip_distance,
+    fare_amount,
+    tip_amount,
+    total_amount
+FROM staging.trips;
+```
+
+<br>
+
+![7](images/7.jpg)
 <br><br>
