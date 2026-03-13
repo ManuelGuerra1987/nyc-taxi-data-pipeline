@@ -4,6 +4,9 @@
 ### Table of contents
 
 - [Data ingestion](#Data-ingestion)
+- [Data warehouse](#Data-warehouse)
+
+ 
 
 # Data ingestion
 
@@ -199,6 +202,8 @@ Finally, the script performs a similar process for another table called zone_loo
 
 # Data warehouse
 
+### Creating schemas
+
 After running the command in PgAdmin:
 
 ```sql
@@ -213,6 +218,18 @@ CREATE SCHEMA dwh;
 The command CREATE SCHEMA staging; creates a new schema called staging in the database. A schema is a logical container used to organize database objects such as tables, views, and indexes. The staging schema is commonly used to store intermediate data before it is cleaned or transformed.
 
 The command CREATE SCHEMA dwh; creates another schema called dwh, which usually stands for Data Warehouse. This schema is typically used to store the final, structured tables that are optimized for analytics and reporting.
+
+```
+raw.taxi_trips_raw
+        ↓
+staging.trips
+        ↓
+dwh.dim_date
+dwh.dim_location
+dwh.dim_payment
+        ↓
+dwh.fact_trips
+```
 
 
 ### Staging
@@ -239,12 +256,13 @@ WHERE trip_distance > 0;
 
 Creates a new table called staging.trips. Copies selected columns from raw.taxi_trips_raw. Filters out rows where the trip distance is not greater than zero
 
-### Schema
+### Datawarehouse - Star Schema
 
-fact_trips
-dim_date
-dim_location
-dim_payment
+
+* dim_date
+* dim_location
+* dim_payment
+* fact_trips
 
 ### dim_date
 
