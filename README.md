@@ -5,6 +5,8 @@
 
 - [Data ingestion](#Data-ingestion)
 - [Data warehouse](#Data-warehouse)
+- [Data analytics](#Data-analytics)
+- [Data visualization](#Data-visualization)
 
  
 
@@ -351,3 +353,119 @@ FROM staging.trips;
 
 ![7](images/7.jpg)
 <br><br>
+
+# Data analytics
+
+### Total trips, distance and revenue
+
+```sql
+SELECT
+    COUNT(*) AS total_trips,
+    ROUND(SUM(trip_distance)::numeric,2) AS total_distance,
+    ROUND(SUM(total_amount)::numeric,2) AS total_revenue,
+    ROUND(AVG(total_amount)::numeric,2) AS avg_trip_revenue
+FROM dwh.fact_trips;
+```
+
+![8](images/8.jpg)
+
+
+### Revenue by payment type
+
+```sql
+SELECT
+    dp.description AS payment_type,
+    COUNT(*) AS trips,
+    ROUND(SUM(f.total_amount)::numeric,2) AS revenue
+FROM dwh.fact_trips f
+JOIN dwh.dim_payment dp
+ON f.payment_type = dp.payment_type
+GROUP BY dp.description
+ORDER BY revenue DESC;
+```
+
+![9](images/9.jpg)
+
+### Top areas within each borough
+
+```sql
+SELECT *
+FROM (
+    SELECT
+        dl."Borough",
+        dl."Zone",
+        COUNT(*) AS trips,
+        RANK() OVER (
+            PARTITION BY dl."Borough"
+            ORDER BY COUNT(*) DESC
+        ) AS rank_in_borough
+    FROM dwh.fact_trips f
+    JOIN dwh.dim_location dl
+    ON f.pickup_location_id = dl.location_id
+    GROUP BY dl."Borough", dl."Zone"
+) t
+WHERE rank_in_borough <= 3;
+```
+
+![10](images/10.jpg)
+
+
+### Trips with abnormally high tips
+
+```sql
+WITH tip_stats AS (
+    SELECT
+        AVG(tip_amount) AS avg_tip,
+        STDDEV(tip_amount) AS std_tip
+    FROM dwh.fact_trips
+)
+SELECT
+    f.trip_distance,
+    f.total_amount,
+    f.tip_amount
+FROM dwh.fact_trips f
+CROSS JOIN tip_stats s
+WHERE f.tip_amount > s.avg_tip + 2 * s.std_tip
+ORDER BY f.tip_amount DESC
+LIMIT 5;
+```
+
+This query identifies outlier trips with unusually high tips by using a statistical rule based on the mean and standard deviation of all tips. First, the CTE calculates the average tip and the standard deviation. Then, a CROSS JOIN attaches these global statistics to every trip so each row can be compared against them. The WHERE clause filters trips where the tip is greater than the average plus two standard deviations
+
+![11](images/11.jpg)
+
+
+### Borough's share of total revenue
+
+```sql
+WITH revenue_by_borough AS (
+    SELECT
+        dl."Borough",
+        SUM(f.total_amount) AS revenue
+    FROM dwh.fact_trips f
+    JOIN dwh.dim_location dl
+        ON f.pickup_location_id = dl.location_id
+    GROUP BY dl."Borough"
+),
+total_revenue AS (
+    SELECT SUM(total_amount) AS total
+    FROM dwh.fact_trips
+)
+
+SELECT
+    r."Borough",
+    r.revenue,
+    ROUND(
+        (100.0 * r.revenue / t.total)::numeric,
+        2
+    ) AS revenue_share_percent
+FROM revenue_by_borough r
+CROSS JOIN total_revenue t
+ORDER BY r.revenue DESC;
+```
+
+
+![12](images/12.jpg)
+
+
+# Data visualization
