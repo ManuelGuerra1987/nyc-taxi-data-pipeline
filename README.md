@@ -5,6 +5,12 @@
 ![pipeline](images/pipeline.jpg)
 <br><br>
 
+This project builds an end-to-end data pipeline using the public NYC Yellow Taxi dataset.The pipeline starts by downloading monthly Parquet files and ingesting them into PostgreSQL using a Python script and DuckDB. 
+
+The raw data is then transformed and organized into a star-schema data warehouse with fact and dimension tables to support analytical queries. 
+
+Finally, the processed data is explored through SQL analysis and visualized in interactive dashboards using Apache Superset.
+
 
 ### Table of contents
 
