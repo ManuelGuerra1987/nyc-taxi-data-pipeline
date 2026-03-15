@@ -558,10 +558,10 @@ dashboards → + dashboard
 
 ### Create chart: Amount of trips per day
 
-Chart source: dwh.fact_trips
-Line Chart
-x-axis: date
-Metrics: COUNT(*)
+* Chart source: dwh.fact_trips
+* Line Chart
+* x-axis: date
+* Metrics: COUNT(*)
 
 ![18](images/18.jpg)
 
@@ -587,10 +587,10 @@ save new dataset as "zones"
 ![19](images/19.jpg)
 
 
-Chart source: dwh.zones
-Bar Chart
-Y-axis: zone
-Metrics: SUM(trips)
+* Chart source: dwh.zones
+* Bar Chart
+* Y-axis: zone
+* Metrics: SUM(trips)
 
 ![20](images/20.jpg)
 
