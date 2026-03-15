@@ -543,7 +543,7 @@ datasets → + dataset → Select database, schema and table → Create dataset 
 
 ![14](images/14.jpg)
 
-### Create chart
+### Create chart: Total trips
 
 Select big number chart → metric: count(*) → SAVE
 
@@ -556,4 +556,45 @@ dashboards → + dashboard
 ![16](images/16.jpg)
 
 
-TODO
+### Create chart: Amount of trips per day
+
+Chart source: dwh.fact_trips
+Line Chart
+x-axis: date
+Metrics: COUNT(*)
+
+![18](images/18.jpg)
+
+### Create chart: Trips per pickup zone
+
+First we must create a new dataset called "zones" which will consist of the fact_trips table and enriched with dim_location with this query:
+
+```sql
+
+SELECT
+    dl."Zone",
+    COUNT(*) AS trips
+FROM dwh.fact_trips ft
+JOIN dwh.dim_location dl
+ON ft.pickup_location_id = dl.location_id
+GROUP BY dl."Zone"
+ORDER BY trips DESC
+LIMIT 10;
+```
+
+save new dataset as "zones"
+
+![19](images/19.jpg)
+
+
+Chart source: dwh.zones
+Bar Chart
+Y-axis: zone
+Metrics: SUM(trips)
+
+![20](images/20.jpg)
+
+
+### Final dashboard
+
+![17](images/17.jpg)
