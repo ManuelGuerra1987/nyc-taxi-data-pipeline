@@ -1,5 +1,10 @@
 # nyc taxi data pipeline
 
+<br>
+
+![pipeline](images/pipeline.jpg)
+<br><br>
+
 
 ### Table of contents
 
@@ -46,11 +51,28 @@ services:
       - "8080:80"
     depends_on:
       - pgdatabase  
+
+
+  superset:
+    image: apache/superset:3.1.1
+    container_name: superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=mysecretkey
+    volumes:
+      - ./superset_home:/app/superset_home
+    depends_on:
+      - pgdatabase  
 ``` 
 
-pgdatabase service creates a PostgreSQL database container. 
+This Docker Compose file defines three services: a PostgreSQL database, a pgAdmin interface, and an Apache Superset instance.
 
-pgadmin service: This creates a pgAdmin container, which is a web interface to manage PostgreSQL databases.
+* First, the pgdatabase service runs a PostgreSQL container using the postgres:13 image. It sets environment variables to define the database credentials (POSTGRES_USER, POSTGRES_PASSWORD) and the database name (POSTGRES_DB). The service maps a local folder (./ny_taxi_postgres_data) to PostgreSQL’s data directory (/var/lib/postgresql/data) so that the database data is persisted even if the container stops. It also maps port 5433 on the host to 5432 inside the container, allowing external tools to connect to the database. 
+
+* Second, the pgadmin service runs pgAdmin (dpage/pgadmin4), which is a web-based interface for managing PostgreSQL databases. It sets the default login email and password through environment variables. A volume (./data_pgadmin) is used to persist pgAdmin configuration data. The service exposes port 8080 on the host, which maps to port 80 in the container, so the interface can be accessed from a browser. The depends_on field ensures that the PostgreSQL service starts before pgAdmin.
+
+* Finally, the superset service runs Apache Superset, a business intelligence and data visualization tool, using the apache/superset:3.1.1 image. It exposes port 8088 so the Superset web interface can be accessed from the browser. The SUPERSET_SECRET_KEY environment variable is required for security and session management. A volume (./superset_home) is mounted to store Superset configuration and metadata so that dashboards and settings persist. The depends_on option ensures that Superset starts after the PostgreSQL database service.
 
 Postgres Port mapping:
 
@@ -61,8 +83,12 @@ Pgadmin Port mapping:
 
 8080:80 → This means you can open pgAdmin in your browser at: http://localhost:8080
 
+Superset Port mapping:
 
-### Register Server
+8088:8088 → This means you can open superset in your browser at: http://localhost:8088
+
+
+### PgAdmin: Register Server
 
 Go to http://localhost:8080/
 
@@ -469,3 +495,55 @@ ORDER BY r.revenue DESC;
 
 
 # Data visualization
+
+Apache Superset is an open-source business intelligence and data visualization platform used to explore and analyze data. It allows users to connect to many types of databases, run SQL queries, and create interactive dashboards and charts without needing to build a custom analytics application.
+
+In a new terminal run the following command:
+```
+docker exec -it superset bash
+```
+
+Then run in order to create admin user:
+
+```
+superset fab create-admin
+```
+
+Then run:
+
+```
+superset db upgrade
+superset init
+```
+
+### Database connection
+
+Settings → Database Connections → + Database → PostgreSQL
+
+![13](images/13.jpg)
+
+
+### Create dataset 
+
+In Apache Superset the flow is always like this:
+
+Database → Dataset → Chart → Dashboard
+
+So, in order to create the dashboard, we must first create the dataset.
+
+datasets → + dataset → Select database, schema and table → Create dataset and create chart
+
+![14](images/14.jpg)
+
+### Create chart
+
+Select big number chart → metric: count(*) → SAVE
+
+![15](images/15.jpg)
+
+### Add chart to dashboard
+
+dashboards → + dashboard
+
+
+TODO

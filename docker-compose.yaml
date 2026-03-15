@@ -20,3 +20,16 @@ services:
       - "8080:80"
     depends_on:
       - pgdatabase  
+
+
+  superset:
+    image: apache/superset:3.1.1
+    container_name: superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=mysecretkey
+    volumes:
+      - ./superset_home:/app/superset_home
+    depends_on:
+      - pgdatabase
