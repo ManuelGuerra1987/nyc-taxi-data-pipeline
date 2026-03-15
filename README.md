@@ -553,5 +553,7 @@ Select big number chart → metric: count(*) → SAVE
 
 dashboards → + dashboard
 
+![16](images/16.jpg)
+
 
 TODO
