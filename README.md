@@ -238,6 +238,8 @@ Finally, the script performs a similar process for another table called zone_loo
 
 # Data warehouse
 
+The schemas and tables in the data warehouse can be created in two different ways. One option is to manually create them using pgAdmin by writing and executing the SQL queries directly in the query editor. The other option is to automate the process using dwh.py script that connects to the database and executes all the SQL statements programmatically.
+
 ### Creating schemas
 
 After running the command in PgAdmin:
@@ -270,7 +272,6 @@ dwh.fact_trips
 
 ### Staging
 
-After running the command in PgAdmin:
 
 ```sql
 CREATE TABLE staging.trips AS
@@ -287,10 +288,13 @@ SELECT
     tip_amount,
     total_amount
 FROM raw.taxi_trips_raw
-WHERE trip_distance > 0;
+WHERE trip_distance > 0
+AND date(lpep_pickup_datetime) between '2019-01-01' and '2019-01-31';
 ```
 
-Creates a new table called staging.trips. Copies selected columns from raw.taxi_trips_raw. Filters out rows where the trip distance is not greater than zero
+This query creates a new table called staging.trips from the raw dataset raw.taxi_trips_raw. It represents a data cleaning step in the staging layer, where the raw data is filtered before being loaded into the data warehouse. 
+
+The query selects only the relevant columns for analysis and removes invalid records by applying two conditions: it excludes trips with a trip_distance equal to 0, which are likely erroneous or incomplete records, and it filters the data to include only trips whose pickup date is between January 1 and January 31, 2019. This staging step ensures that downstream transformations and analytical models work with clean and consistent data rather than the unfiltered raw dataset.
 
 ### Datawarehouse - Star Schema
 
